@@ -22,6 +22,20 @@ Web 与计算端在同一 `main` 分支共同版本化，以保证 API 契约一
 
 Web 保存配置、图片和 GLB；GPU 服务器仅负责串行计算及临时文件。支持 PBR、纯色无光照和白模 GLB，自动/手动选 GPU，并在空闲后卸载模型释放显存。
 
+## 界面展示
+
+### 图片生成与编辑
+
+![图片生成与编辑页面](docs/image-workspace.png)
+
+### 图片转 3D 模型
+
+![图片转 3D 模型页面](docs/model-workspace.png)
+
+### 设置与配置
+
+![设置与配置页面](docs/settings-workspace.png)
+
 ## 运行 Web
 
 ```bash
@@ -52,10 +66,10 @@ docker run -d --name hunyuan3d-web \
 
 ## 文档
 
-- `docs/DEVELOPMENT_RECORD.md`：架构、功能、进度和维护原则
-- `docs/SYNOLOGY_DEPLOYMENT.md`：群晖 Container Manager 部署
-- `docs/COMPUTE_SERVER_DEPLOYMENT.md`：计算服务器持久目录与运行方式
-- `docs/PORTAINER_COMPUTE_REBUILD.md`：计算容器重建及手动恢复
-- `compute/README.md`：计算端覆盖层发布说明
+- [开发与维护记录](docs/DEVELOPMENT_RECORD.md)：架构、功能、进度和维护原则
+- [群晖部署](docs/SYNOLOGY_DEPLOYMENT.md)：Container Manager 部署
+- [计算服务器部署](docs/COMPUTE_SERVER_DEPLOYMENT.md)：持久目录与运行方式
+- [计算容器重建](docs/PORTAINER_COMPUTE_REBUILD.md)：Portainer 重建及手动恢复
+- [Compute Overlay (English)](compute/README.md)：计算端覆盖层发布说明
 
 Hunyuan3D 模型本体及其许可请以上游 Tencent Hunyuan3D-2.1 项目为准。

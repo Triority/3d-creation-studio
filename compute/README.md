@@ -1,5 +1,7 @@
 # Hunyuan3D-2.1 Compute Overlay
 
+[中文部署文档 / Chinese deployment guide](../docs/COMPUTE_SERVER_DEPLOYMENT.md)
+
 This overlay contains the compute-service changes used by the Vue Web application. Apply it to a clean Tencent Hunyuan3D-2.1 checkout while preserving relative paths.
 
 ## Runtime data
