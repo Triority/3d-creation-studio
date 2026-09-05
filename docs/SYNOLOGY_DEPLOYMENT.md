@@ -48,7 +48,7 @@ Sub2API 地址同样必须从群晖容器网络可达，例如 `http://<图片AP
 4. 上传镜像 tar 文件并等待导入完成。
 5. 从 `hunyuan3d-web:2026.09.06-vue.3` 创建容器，并按上述内容配置端口、卷和环境变量。
 
-也可以在支持 Compose 的 Container Manager“项目”中使用 `docker-compose.synology.yml`，创建前按实际群晖卷路径和密码修改配置。
+也可以在支持 Compose 的 Container Manager“项目”中使用 `web/docker-compose.synology.yml`，创建前按实际群晖卷路径和密码修改配置。
 
 ## 备份和升级
 

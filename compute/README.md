@@ -10,7 +10,7 @@ Do not commit model weights, virtual environments, API tokens, uploads, jobs, ou
 /media/B/Triority/Hunyuan3D-2.1/
 ```
 
-The source tree is stored in the persistent `app/` subdirectory. See `COMPUTE_SERVER_DEPLOYMENT.md` for the directory contract and startup procedure.
+The source tree is stored in the persistent `app/` subdirectory. See `../docs/COMPUTE_SERVER_DEPLOYMENT.md` in this repository for the directory contract and startup procedure.
 
 ## Service model
 
@@ -24,3 +24,13 @@ HUNYUAN_IDLE_CHECK_INTERVAL=30
 ```
 
 The API token is loaded at runtime from the persistent `compute-api.token`; it is intentionally excluded from this package.
+
+## Build the overlay archive
+
+From the repository root:
+
+```bash
+./compute/package-overlay.sh
+```
+
+The generated `compute/hunyuan3d-compute-overlay.tar.gz` is ignored by Git. Extract it over a clean Tencent Hunyuan3D-2.1 checkout, preserving relative paths.

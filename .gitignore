@@ -20,7 +20,7 @@ outputs-mv/
 venv/
 __pycache__/
 *.py[cod]
-web-src/node_modules/
+**/node_modules/
 
 # Runtime state and packaged artifacts
 *.log

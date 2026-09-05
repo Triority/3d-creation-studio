@@ -1,8 +1,6 @@
-COMPUTE_RELEASE_README.md
-COMPUTE_SERVER_DEPLOYMENT.md
+README.md
 compute-release-files.txt
-DEVELOPMENT_RECORD.md
-PORTAINER_COMPUTE_REBUILD.md
+package-overlay.sh
 compute_agent.py
 config.mv.compat.yaml
 container-entrypoint.sh

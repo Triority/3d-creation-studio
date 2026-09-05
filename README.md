@@ -2,6 +2,16 @@
 
 一个整合图片生成/编辑、Hunyuan3D-2.1 图片转 3D、GLB 预览与历史管理的局域网工作台。
 
+## 仓库结构
+
+```text
+web/       Vue/FastAPI Web 应用、Dockerfile 和群晖 Compose
+compute/   应用到 Hunyuan3D-2.1 上游源码的计算服务覆盖层
+docs/      架构、部署、迁移和运维文档
+```
+
+Web 与计算端在同一 `main` 分支共同版本化，以保证 API 契约一致；它们不是互相替代的版本，因此不使用两个长期分支。
+
 ## 组件
 
 - Vue 3 + Vite + Three.js 前端
@@ -15,12 +25,12 @@ Web 保存配置、图片和 GLB；GPU 服务器仅负责串行计算及临时�
 ## 运行 Web
 
 ```bash
-cd web-src
+cd web/web-src
 npm ci
 npm run build
-cd ..
-python -m pip install -r requirements-local.txt
-HUNYUAN_INITIAL_PASSWORD='请设置强密码' python vue_web.py
+cd ../..
+python -m pip install -r web/requirements-local.txt
+HUNYUAN_INITIAL_PASSWORD='请设置强密码' ./web/start-local-web.sh
 ```
 
 访问 `http://localhost:7864/login`，登录后在设置页填写 Compute API 和图片 API 地址及密钥。
@@ -28,7 +38,7 @@ HUNYUAN_INITIAL_PASSWORD='请设置强密码' python vue_web.py
 Docker：
 
 ```bash
-docker build -t hunyuan3d-web:latest .
+docker build -t hunyuan3d-web:latest ./web
 docker run -d --name hunyuan3d-web \
   -p 7864:7864 \
   -v /path/to/persistent-data:/data \
@@ -42,10 +52,10 @@ docker run -d --name hunyuan3d-web \
 
 ## 文档
 
-- `DEVELOPMENT_RECORD.md`：架构、功能、进度和维护原则
-- `SYNOLOGY_DEPLOYMENT.md`：群晖 Container Manager 部署
-- `COMPUTE_SERVER_DEPLOYMENT.md`：计算服务器持久目录与运行方式
-- `PORTAINER_COMPUTE_REBUILD.md`：计算容器重建及手动恢复
-- `COMPUTE_RELEASE_README.md`：计算端覆盖层发布说明
+- `docs/DEVELOPMENT_RECORD.md`：架构、功能、进度和维护原则
+- `docs/SYNOLOGY_DEPLOYMENT.md`：群晖 Container Manager 部署
+- `docs/COMPUTE_SERVER_DEPLOYMENT.md`：计算服务器持久目录与运行方式
+- `docs/PORTAINER_COMPUTE_REBUILD.md`：计算容器重建及手动恢复
+- `compute/README.md`：计算端覆盖层发布说明
 
 Hunyuan3D 模型本体及其许可请以上游 Tencent Hunyuan3D-2.1 项目为准。

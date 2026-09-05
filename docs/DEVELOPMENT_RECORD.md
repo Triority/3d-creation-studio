@@ -37,11 +37,11 @@ Web 与计算端通过带 Bearer Token 的 HTTP API 通信。计算完成后，W
 
 ### 技术与入口
 
-- `web-src/`：Vue 3、Vite、Three.js、Lucide 源码。
-- `web-dist/`：构建产物，随 Git 和 Docker 镜像发布。
-- `vue_web.py`：FastAPI API、鉴权和静态资源入口。
-- `local_web.py`：Sub2API、Compute API、历史及兼容业务逻辑。
-- `start-local-web.sh`：源码环境启动脚本。
+- `web/web-src/`：Vue 3、Vite、Three.js、Lucide 源码。
+- `web/web-dist/`：构建产物，随 Git 和 Docker 镜像发布。
+- `web/vue_web.py`：FastAPI API、鉴权和静态资源入口。
+- `web/local_web.py`：Sub2API、Compute API、历史及兼容业务逻辑。
+- `web/start-local-web.sh`：源码环境启动脚本。
 - 路由：`/login`、`/image`、`/model`、`/settings`。
 - 监听：`0.0.0.0:7864`。
 
@@ -109,7 +109,7 @@ cd /media/B/Triority/Hunyuan3D-2.1/app
 
 ## 5. Docker 镜像与 NAS 部署
 
-Web 镜像只包含 Python Web 服务和 `web-dist/`，不包含模型权重、Node 依赖、用户数据或真实密钥。当前发布标签：
+Web 镜像只包含 Python Web 服务和 `web/web-dist/`，不包含模型权重、Node 依赖、用户数据或真实密钥。当前发布标签：
 
 ```text
 hunyuan3d-web:2026.09.06-vue.3
@@ -118,11 +118,11 @@ hunyuan3d-web:2026.09.06-vue.3
 构建与导出：
 
 ```bash
-cd web-src
+cd web/web-src
 npm ci
 npm run build
-cd ..
-docker build -t hunyuan3d-web:2026.09.06-vue.3 .
+cd ../..
+docker build -t hunyuan3d-web:2026.09.06-vue.3 ./web
 docker save -o hunyuan3d-web-2026.09.06-vue.3.tar hunyuan3d-web:2026.09.06-vue.3
 ```
 
@@ -135,20 +135,20 @@ docker save -o hunyuan3d-web-2026.09.06-vue.3.tar hunyuan3d-web:2026.09.06-vue.3
 - `TZ=Asia/Shanghai`。
 - 重启策略 `unless-stopped`。
 
-容器中的 `127.0.0.1` 是容器自身。Compute API 必须填写 NAS 容器能访问的服务器或隧道地址。计算服务器只需向 NAS 提供 TCP 7863；7860/7861 无需暴露。详见 `SYNOLOGY_DEPLOYMENT.md` 和 `PORTAINER_COMPUTE_REBUILD.md`。
+容器中的 `127.0.0.1` 是容器自身。Compute API 必须填写 NAS 容器能访问的服务器或隧道地址。计算服务器只需向 NAS 提供 TCP 7863；7860/7861 无需暴露。详见 `docs/SYNOLOGY_DEPLOYMENT.md` 和 `docs/PORTAINER_COMPUTE_REBUILD.md`。
 
 ## 6. 计算端迁移
 
-仓库中的计算端文件是对腾讯 Hunyuan3D-2.1 上游的覆盖层，迁移时按相对路径复制到干净的上游 checkout。`compute-release-files.txt` 定义清单，`COMPUTE_RELEASE_README.md` 提供说明。
+`compute/` 是对腾讯 Hunyuan3D-2.1 上游的覆盖层，迁移时将其内容按相对路径复制到干净的上游 checkout。`compute/compute-release-files.txt` 定义清单，`compute/package-overlay.sh` 生成迁移包，`compute/README.md` 提供说明。
 
-当前计算服务器持久目录中另有日期化迁移包。包不包含权重、虚拟环境、缓存、令牌、任务、结果或日志；这些内容须在目标机器单独准备。纹理功能依赖已编译的 `custom_rasterizer`，持久虚拟环境的 editable 路径必须指向持久 app，检查方法见 `PORTAINER_COMPUTE_REBUILD.md`。
+当前计算服务器持久目录中另有日期化迁移包。包不包含权重、虚拟环境、缓存、令牌、任务、结果或日志；这些内容须在目标机器单独准备。纹理功能依赖已编译的 `custom_rasterizer`，持久虚拟环境的 editable 路径必须指向持久 app，检查方法见 `docs/PORTAINER_COMPUTE_REBUILD.md`。
 
 ## 7. 开发与验证
 
 ```bash
-cd web-src && npm ci && npm run build
-cd ..
-python -m py_compile vue_web.py local_web.py compute_agent.py unified_app.py gradio_app.py
+cd web/web-src && npm ci && npm run build
+cd ../..
+python -m py_compile web/vue_web.py web/local_web.py compute/compute_agent.py compute/unified_app.py compute/gradio_app.py
 ```
 
 发布前验证：

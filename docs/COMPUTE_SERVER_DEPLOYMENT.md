@@ -61,5 +61,5 @@ app/stop-hunyuan3d.sh
 app/start-hunyuan3d-mv.sh
 app/stop-hunyuan3d-mv.sh
 app/status-all.sh
-COMPUTE_SERVER_DEPLOYMENT.md
+docs/COMPUTE_SERVER_DEPLOYMENT.md
 ```
