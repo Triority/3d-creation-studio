@@ -1,0 +1,14 @@
+.git
+.agents
+.codex
+.venv
+__pycache__
+web-src
+downloads
+image-library
+model-library
+*.tar
+*.log
+.web-password
+.web-session-secret
+local-web-settings.json

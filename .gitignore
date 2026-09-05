@@ -1,0 +1,35 @@
+# Local credentials and mutable configuration
+.web-password
+.web-session-secret
+local-web-settings.json
+pending-transfer.json
+compute-api.token
+
+# Generated user data
+downloads/
+image-library/
+model-library/
+jobs/
+api-tasks/
+api-uploads/
+outputs/
+outputs-mv/
+
+# Python and JavaScript dependencies/caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+web-src/node_modules/
+
+# Runtime state and packaged artifacts
+*.log
+*.pid
+*.gpu
+*.tar
+*.tar.gz
+.DS_Store
+
+# Local agent metadata
+.agents/
+.codex/

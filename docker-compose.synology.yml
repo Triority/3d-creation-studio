@@ -1,0 +1,13 @@
+services:
+  hunyuan3d-web:
+    image: hunyuan3d-web:2026.09.06-vue.3
+    container_name: hunyuan3d-web
+    restart: unless-stopped
+    ports:
+      - "7864:7864"
+    environment:
+      HUNYUAN_INITIAL_PASSWORD: "change-this-password"
+      HUNYUAN_WEB_DATA_DIR: /data
+      TZ: Asia/Shanghai
+    volumes:
+      - /volume1/docker/hunyuan3d-web:/data
