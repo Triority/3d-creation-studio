@@ -1,6 +1,6 @@
 services:
   hunyuan3d-web:
-    image: hunyuan3d-web:2026.09.06-vue.3
+    image: hunyuan3d-web:2026.09.16-vue.4
     container_name: hunyuan3d-web
     restart: unless-stopped
     ports:

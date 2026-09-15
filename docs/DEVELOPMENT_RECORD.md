@@ -112,7 +112,7 @@ cd /media/B/Triority/Hunyuan3D-2.1/app
 Web 镜像只包含 Python Web 服务和 `web/web-dist/`，不包含模型权重、Node 依赖、用户数据或真实密钥。当前发布标签：
 
 ```text
-hunyuan3d-web:2026.09.06-vue.3
+hunyuan3d-web:2026.09.16-vue.4
 ```
 
 构建与导出：
@@ -122,8 +122,8 @@ cd web/web-src
 npm ci
 npm run build
 cd ../..
-docker build -t hunyuan3d-web:2026.09.06-vue.3 ./web
-docker save -o hunyuan3d-web-2026.09.06-vue.3.tar hunyuan3d-web:2026.09.06-vue.3
+docker build -t hunyuan3d-web:2026.09.16-vue.4 ./web
+docker save -o hunyuan3d-web-2026.09.16-vue.4.tar hunyuan3d-web:2026.09.16-vue.4
 ```
 
 镜像 tar 是交付制品，不进入 Git。群晖 Container Manager 至少配置：
