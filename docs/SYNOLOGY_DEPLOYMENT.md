@@ -1,67 +1,111 @@
 # 群晖 Container Manager 部署
 
-## 镜像和持久化
+当前 Web 镜像：
 
-镜像名称：`hunyuan3d-web:2026.09.16-vue.4`
+```text
+hunyuan3d-web:2026.09.16-vue.4
+```
 
-建议先在群晖创建目录：
+本地导出文件：
+
+```text
+hunyuan3d-web-2026.09.16-vue.4.tar
+SHA-256: 07402534ed11ebce04d49de8d8081c792253f6173bdd056ed804332c04a67d29
+```
+
+## 1. 准备持久目录
+
+在 NAS 上创建一个只供本项目使用的目录，例如：
 
 ```text
 /volume1/docker/hunyuan3d-web
 ```
 
-创建容器时配置：
+该目录将挂载为容器 `/data`，其中保存登录密码哈希、会话密钥、服务配置、图片历史和 GLB 历史。升级或重建容器时必须继续使用同一目录。
 
-- 端口：本地端口 `7864` 映射容器端口 `7864`，协议 TCP。
-- 存储空间：群晖目录 `/volume1/docker/hunyuan3d-web` 映射到容器 `/data`，读写权限。
-- 重启策略：除非手动停止，否则始终重新启动。
-- 环境变量 `HUNYUAN_INITIAL_PASSWORD`：填写首次登录密码。
-- 环境变量 `HUNYUAN_WEB_DATA_DIR`：保持 `/data`。
-- 环境变量 `TZ`：建议填写 `Asia/Shanghai`。
+## 2. 导入镜像
+
+1. 打开 Container Manager 的“映像”。
+2. 从文件导入 `hunyuan3d-web-2026.09.16-vue.4.tar`。
+3. 等待出现镜像 `hunyuan3d-web:2026.09.16-vue.4`。
+4. 从该镜像创建容器。
+
+也可以在仓库根目录构建：
+
+```bash
+docker build -t hunyuan3d-web:2026.09.16-vue.4 ./web
+```
+
+## 3. 容器配置
+
+端口：
+
+```text
+NAS 7864/TCP -> 容器 7864/TCP
+```
+
+存储空间：
+
+```text
+/volume1/docker/hunyuan3d-web -> /data（读写）
+```
+
+环境变量：
+
+```text
+HUNYUAN_WEB_DATA_DIR=/data
+HUNYUAN_INITIAL_PASSWORD=<首次部署强密码>
+TZ=Asia/Shanghai
+```
+
+重启策略使用 `unless-stopped`。镜像默认启动命令已经是 `python vue_web.py`，无需额外填写命令。
+
+`HUNYUAN_INITIAL_PASSWORD` 仅在 `/data/.web-password` 不存在时生效。若复用旧持久目录，应使用原密码登录；修改环境变量不会重置已保存密码。
+
+仓库提供 `web/docker-compose.synology.yml` 作为模板，其中密码占位值必须在部署前修改。
+
+## 4. 配置外部服务
 
 启动后访问：
 
 ```text
-http://群晖IP:7864/login
+http://<群晖地址>:7864/login
 ```
 
-`HUNYUAN_INITIAL_PASSWORD` 只在 `/data/.web-password` 不存在时用于初始化密码。首次登录后可在设置页修改密码；之后重启容器不会重置密码。若复用已有 `/data`，应使用该数据目录中原来的密码，而不是环境变量值。
+登录后在设置页配置：
 
-## 计算服务器连接
+- Compute API：`http://<计算服务器地址>:7863`
+- Compute Token：读取计算服务器持久目录中的令牌，通过安全渠道填写。
+- 图片 API：填写 NAS 容器网络能够访问的 Sub2API 地址。
+- 图片 API Key 和图片模型：保存后再测试并读取模型。
 
-容器中的 `127.0.0.1` 指容器自身，不能使用当前电脑上的 `127.0.0.1:17863` SSH 隧道。群晖必须能够访问 Compute API，可选择：
+容器内的 `127.0.0.1` 指容器自身，不能代表个人电脑或计算服务器。所有地址必须从 NAS 容器网络实际可达。
 
-1. 在设置页填写群晖能直接访问的 Compute API 地址，例如 `http://<计算服务器地址>:7863`。
-2. 在群晖上另行建立 SSH 隧道，并填写该隧道在容器网络中可访问的地址。
+计算端只需向 NAS 开放 7863。7860 和 7861 是计算容器内部的按需模型后端，不需要直接提供给 Web。
 
-Compute API 仍要求正确令牌。不要把令牌写入镜像或 Compose 文件，应在 Web 设置页填写并保存。
+## 5. 持久数据
 
-Sub2API 地址同样必须从群晖容器网络可达，例如 `http://<图片API地址>:<端口>`。
+`/data` 包含：
 
-## 导入镜像
+```text
+.web-password             登录密码哈希
+.web-session-secret       会话签名密钥
+local-web-settings.json   Compute 和图片 API 配置
+image-library/            图片及元数据
+model-library/            GLB 及元数据
+downloads/                旧版兼容文件
+pending-transfer.json     旧版一次性传递状态
+```
 
-若使用导出的 tar 文件：
+密钥目前保存在 `local-web-settings.json`，应限制 NAS 目录权限并纳入加密备份策略。不要将 `/data` 内容提交到 Git 或打入镜像。
 
-1. 打开 Container Manager。
-2. 进入“映像”。
-3. 选择“新增”或“从文件添加”。
-4. 上传镜像 tar 文件并等待导入完成。
-5. 从 `hunyuan3d-web:2026.09.16-vue.4` 创建容器，并按上述内容配置端口、卷和环境变量。
+## 6. 升级
 
-也可以在支持 Compose 的 Container Manager“项目”中使用 `web/docker-compose.synology.yml`，创建前按实际群晖卷路径和密码修改配置。
+1. 备份 `/volume1/docker/hunyuan3d-web`。
+2. 导入新镜像。
+3. 停止并重建 Web 容器。
+4. 继续挂载原目录到 `/data`。
+5. 保持 7864 端口映射和环境变量。
+6. 登录后检查设置、图片历史、模型历史和 Compute API 连接。
 
-## 备份和升级
-
-所有持久数据都位于映射的 `/data`：
-
-- `.web-password`：登录密码哈希
-- `.web-session-secret`：登录会话密钥
-- `local-web-settings.json`：Compute API 和 Sub2API 设置
-- `downloads/`：生成图片
-- `image-library/`：图片生成与编辑历史（图片和元数据）
-- `model-library/`：GLB 模型与元数据
-- `pending-transfer.json`：页面间一次性图片传递（使用后自动删除）
-
-重新安装或重建容器时，必须继续把原来的群晖目录挂载到 `/data`。配置、密码、图片历史和模型历史都以该目录中的持久化文件为准。即使新容器设置了不同的 `HUNYUAN_INITIAL_PASSWORD`，只要 `/data/.web-password` 已存在，程序仍使用已保存的密码；环境变量仅负责首次初始化。
-
-升级镜像前备份群晖的 `/volume1/docker/hunyuan3d-web`。替换容器时继续挂载同一目录即可保留设置和历史文件。
+只要 `/data` 挂载正确，重建容器不会丢失配置和历史。

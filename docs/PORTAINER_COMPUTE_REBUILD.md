@@ -1,91 +1,76 @@
-# Portainer 计算容器重建配置
+# Portainer 计算容器重建
 
-当前计算端代码已经持久化到：
+本文只描述现有计算服务器容器的重建约束。完整目录和生命周期说明见 [COMPUTE_SERVER_DEPLOYMENT.md](COMPUTE_SERVER_DEPLOYMENT.md)。
 
-```text
-/media/B/Triority/Hunyuan3D-2.1/app
-```
+## 必须保留
 
-模型、Python 环境、缓存、日志、令牌和任务数据位于：
+- 原 Hunyuan3D 计算镜像及 NVIDIA runtime/device 配置。
+- 原共享内存大小、网络模式和必要环境变量。
+- 宿主机 `/media/B` 到容器 `/media/B` 的同路径读写挂载。
+- SSH 宿主机端口到容器 22 的映射。
+- 宿主机 7863 到容器 7863 的 Compute API 映射。
+- `unless-stopped` 或适合当前环境的重启策略。
 
-```text
-/media/B/Triority/Hunyuan3D-2.1
-```
+严禁重新初始化 `/media/B`，尤其不得操作 `/media/B/Triority` 之外的数据。
 
-## 重建时必须保留
+## 当前启动策略
 
-- 原镜像及原有 GPU 配置（包含 NVIDIA runtime/device requests）。
-- 原有共享内存大小、环境变量和网络模式。
-- SSH 映射：宿主机 `25500` 到容器 `22`。
-- 新增 Compute API 映射：宿主机 `7863` 到容器 `7863`。
-- `/media/B` 必须继续以相同路径挂载到容器 `/media/B`。
-- 不要修改或重新初始化 `/media/B`，尤其不能操作 `/media/B/Triority` 之外的数据。
-- 重启策略设为 `Unless stopped` 或 `Always`。
-
-## 当前采用：手动启动
-
-保留镜像原来的容器启动命令，以便 SSH 和 Portainer Web Console 正常使用：
+当前选择手动启动 Compute API，以保留 Portainer Web Console 和 SSH 使用方式。容器主命令可保持：
 
 ```text
 /bin/sh -c "service ssh start && bash"
 ```
 
-容器重启后，通过 SSH 登录：
-
-```bash
-ssh -p <SSH端口> <用户>@<计算服务器地址>
-```
-
-按需加载模式只需执行：
+容器重启后通过 SSH 或 Portainer Console 执行：
 
 ```bash
 cd /media/B/Triority/Hunyuan3D-2.1/app
 ./start-compute-agent.sh
 ```
 
-也可以在 Portainer 的 Console 中选择 `/bin/bash`、用户 `root`，再执行相同命令。
+不要同时手动启动两个模型后端。首次任务会按需载入对应模型，默认空闲 10 分钟后卸载。
 
-单图和多视图模型不再随 Compute API 启动。首次任务会按需加载对应模型，通常需要约 1 到 3 分钟；任务结束后默认保留 10 分钟，期间收到同类任务可直接复用，继续空闲则停止模型进程并完整释放显存。可通过 `HUNYUAN_IDLE_TIMEOUT` 调整秒数。
+`compute/container-entrypoint.sh` 仍保留为备用自动启动方案，但当前部署不使用它。该脚本会同时启动模型后端，与现在的按需策略不一致，启用前必须先重新评估并修改。
 
-持久 Python 环境中的 `custom_rasterizer` editable 路径已经改到持久化 app。若纹理阶段出现 `no attribute rasterize`，检查：
+## 重建后检查
+
+```bash
+cd /media/B/Triority/Hunyuan3D-2.1/app
+./status-all.sh
+ps -ef | grep -E 'compute_agent|gradio_app.py' | grep -v grep
+tail -n 100 /media/B/Triority/Hunyuan3D-2.1/compute-agent.log
+```
+
+正常空闲状态：
+
+- Compute API 7863 在线。
+- 7860 和 7861 可以不监听。
+- GPU 只保留其他应用占用，不应长期被 Hunyuan3D 模型占满。
+
+在 Web 设置页使用正确 Compute Token 测试连接，应能读取 GPU 列表和模型生命周期状态。错误 Token 必须返回 HTTP 401。
+
+## 纹理扩展检查
+
+若 PBR 或纯色纹理阶段报 `custom_rasterizer` 缺少 `rasterize`：
 
 ```bash
 cat /media/B/Triority/Hunyuan3D-2.1/venv/lib/python3.10/site-packages/__editable__.custom_rasterizer-0.1.pth
 ```
 
-其内容必须是：
+内容应为：
 
 ```text
 /media/B/Triority/Hunyuan3D-2.1/app/hy3dpaint/custom_rasterizer
 ```
 
-需要检查状态时执行：
+持久目录中还必须有与当前环境匹配的 `custom_rasterizer_kernel` 扩展。不要依赖容器可写层中的旧 editable 路径。
 
-```bash
-cd /media/B/Triority/Hunyuan3D-2.1/app
-./status-all.sh
-tail -n 50 /media/B/Triority/Hunyuan3D-2.1/hunyuan3d.log
-tail -n 50 /media/B/Triority/Hunyuan3D-2.1/hunyuan3d-mv.log
-tail -n 50 /media/B/Triority/Hunyuan3D-2.1/compute-agent.log
-```
+## Web 连接地址
 
-`container-entrypoint.sh` 作为备用自动启动入口保留，但当前不要求 Portainer 使用它。
-
-## 重建后验证
-
-```bash
-ssh -p <SSH端口> <用户>@<计算服务器地址>
-ps -ef | grep -E 'gradio_app.py|compute_agent' | grep -v grep
-curl -I http://127.0.0.1:7860/config
-curl -I http://127.0.0.1:7861/config
-```
-
-按需模式空闲时，后两个模型端口不可访问属于正常现象。应以 Compute API `7863` 在线和 `/health` 中 `models_loaded` 状态为准。
-
-Compute API `/health` 需要 Bearer token，应从 Web 设置页使用正确令牌测试。NAS Web 的计算服务器地址改为：
+NAS Web 设置页填写：
 
 ```text
 http://<计算服务器地址>:7863
 ```
 
-仅在可信内网发布 7863；如有主机防火墙，限制为 NAS/Web 主机来源地址。
+不要填写 NAS 容器自身的 `127.0.0.1`。仅向可信内网或指定 Web 主机开放 7863。
